@@ -82,6 +82,7 @@ namespace VersionManager.WebService
                             string strItem = streamReader1.ReadToEnd();
                             strFinalStruct += strItem;
                             streamReader1.Close();
+                            //streamReader1.Close();
                         }
                         if (!string.IsNullOrWhiteSpace(item.AlterScriptPath) && File.Exists(string.Format(@"{0}\{1}\Scripts\__Alter.sql", strVersionPath, item.VersionName)))
                         {
