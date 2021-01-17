@@ -16,7 +16,7 @@ namespace VersionManager
         [STAThread]
         static void Main()
         {
-            VersionManager.Utilities.AppConfig.UseSSL = ConfigurationManager.AppSettings.Get("UseSLL").ToBoolean();
+            VersionManager.Utilities.AppConfig.UseSSL = ConfigurationManager.AppSettings.Get("UseSSL").ToInteger() == 1;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmVersionManager());
