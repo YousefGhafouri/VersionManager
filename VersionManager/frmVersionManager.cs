@@ -21,6 +21,7 @@ namespace VersionManager
         List<VersionsDto> versions;
         private int currentId { get => gridVersionManager.GetValue("Id").ToInteger(0); }
         private string currentVersionName { get => gridVersionManager.GetValue("VersionName").ToString(); }
+        WaitingWindows waitingWindows = new WaitingWindows();
         #endregion
 
         #region Method
@@ -55,7 +56,9 @@ namespace VersionManager
         #region Event
         private void frmVersionManager_Load(object sender, EventArgs e)
         {
+            waitingWindows.Show(this);
             FillData();
+            waitingWindows.Close();
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -92,7 +95,9 @@ namespace VersionManager
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
+            waitingWindows.Show(this);
             FillData();
+            waitingWindows.Close();
             //string addr = @"F:\Programming\Ghafouri\VersionManager\TempFolder";
             //string desAddr = @"/TempFolder";
             //NetworkShare.CopyAllFiles(addr, desAddr);
@@ -107,6 +112,7 @@ namespace VersionManager
             {
                 if (MessageBox.Show("آیا قصد حذف ورژن انتخاب شده را دارید", "حذف ورژن", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
                 {
+                    waitingWindows.Show(this);
                     versionsController.Delete(currentId);
                     if (NetworkShare.DoesFtpDirectoryExist("/" + currentVersionName))
                     {
@@ -120,6 +126,10 @@ namespace VersionManager
             catch (Exception)
             {
                 throw;
+            }
+            finally
+            {
+                waitingWindows.Close();
             }
         }
 

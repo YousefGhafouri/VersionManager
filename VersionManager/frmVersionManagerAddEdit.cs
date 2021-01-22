@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using VersionManager.DataControl.Controllers;
 using VersionManager.Model;
@@ -20,6 +21,7 @@ namespace VersionManager
         VersionsDto versions;
         private int _versionsId;
         FormAction _formAction;
+        WaitingWindows waitingWindows = new WaitingWindows();
         #endregion
 
         public frmVersionManagerAddEdit(FormAction formAction, int versionId) : this(formAction)
@@ -94,23 +96,36 @@ namespace VersionManager
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            versions = (VersionsDto)bsVersions.Current;
-            versionsController.Save(_formAction, versions);
-            string strDestinationDllPath = "/" + versions.VersionName;
-            string strDestinationScriptPath = NetworkShare.host + strDestinationDllPath + "/Scripts";
-            if(_formAction == FormAction.Edit)
+            try
             {
-                if (NetworkShare.DoesFtpDirectoryExist("/" + versions.VersionName))
+                waitingWindows.Show(this);
+                versions = (VersionsDto)bsVersions.Current;
+                versionsController.Save(_formAction, versions);
+                string strDestinationDllPath = "/" + versions.VersionName;
+                string strDestinationScriptPath = NetworkShare.host + strDestinationDllPath + "/Scripts";
+                if (_formAction == FormAction.Edit)
                 {
-                    NetworkShare.DeleteFilesAndFolders("/" + versions.VersionName);
-                    NetworkShare.DeleteFolder("/" + versions.VersionName);
+                    if (NetworkShare.DoesFtpDirectoryExist("/" + versions.VersionName))
+                    {
+                        NetworkShare.DeleteFilesAndFolders("/" + versions.VersionName);
+                        NetworkShare.DeleteFolder("/" + versions.VersionName);
+                    }
                 }
+                NetworkShare.CopyAllFilesToFTP(versions.DllPath, strDestinationDllPath, true);
+                NetworkShare.WriteFilesToFtp(versions.StructureScriptPath, strDestinationScriptPath + "/__Structure.sql");
+                NetworkShare.WriteFilesToFtp(versions.AlterScriptPath, strDestinationScriptPath + "/__Alter.sql");
+                waitingWindows.Close();
+                MessageBox.Show("اطلاعات با موفقیت ذخیره شد");
+                this.Close();
             }
-            NetworkShare.CopyAllFilesToFTP(versions.DllPath, strDestinationDllPath, true);
-            NetworkShare.WriteFilesToFtp(versions.StructureScriptPath, strDestinationScriptPath + "/__Structure.sql");
-            NetworkShare.WriteFilesToFtp(versions.AlterScriptPath, strDestinationScriptPath + "/__Alter.sql");
-            MessageBox.Show("اطلاعات با موفقیت ذخیره شد");
-            this.Close();
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Format("خطا در انجام عملیات{0}", Environment.NewLine + ex.Message));
+            }
+            finally
+            {
+                waitingWindows.Close();
+            }
         }
 
         private void btnClose_Click(object sender, EventArgs e)
