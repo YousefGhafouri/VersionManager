@@ -11,6 +11,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using static VersionManager.Utilities.DataStructure;
 using VersionManager.Utilities;
+using System.Security.AccessControl;
 
 namespace VersionManager.WebService
 {
@@ -29,11 +30,11 @@ namespace VersionManager.WebService
         /// <summary>
         /// مسیر فایلهایی که در برنامه مدیریت ورژن روی هاست بارگذاری شده
         /// </summary>
-        private string strVersionPath = @"D:\Projects\Ftp\VersionManagerFtp";
+        private string strVersionPath = @"\Versions";
         /// <summary>
         /// مسیری که فایل پک درون آن ساخته می شود و کاربر میتواند از این مسیر فایل پک را دانلود کند
         /// </summary>
-        private string strZipFilePath = string.Format(@"{0}\ZipFilePath", @"D:\Projects\Ftp\DownloadFtp");
+        private string strZipFilePath = string.Format(@"{0}\ZipFilePath", AppDomain.CurrentDomain.BaseDirectory+"DownloadFtp");
 
         public WSUpdate()
         {
@@ -43,6 +44,10 @@ namespace VersionManager.WebService
         [WebMethod]
         public string GetUpdate(string userID, string version)
         {
+            System.Security.AccessControl.DirectorySecurity DirPermission = new System.Security.AccessControl.DirectorySecurity();
+            System.Security.AccessControl.FileSystemAccessRule FRule = new System.Security.AccessControl.FileSystemAccessRule
+                ("Everyone", System.Security.AccessControl.FileSystemRights.FullControl, System.Security.AccessControl.AccessControlType.Allow);
+            DirPermission.AddAccessRule(FRule);
             try
             {
                 versions = versionsController.GetForUpdate(version);
@@ -57,16 +62,19 @@ namespace VersionManager.WebService
                         , DateTime.Now.Hour.ToString().PadLeft(2, '0')
                         , DateTime.Now.Minute.ToString().PadLeft(2, '0')
                         , DateTime.Now.Second.ToString().PadLeft(2, '0'));
-                    string strPackPath = string.Format(@"{0}\UpdatePacks\{1}_{2}", AppDomain.CurrentDomain.BaseDirectory, userID, strCurrentDate);
+                    string strPackPath = string.Format(@"{0}UpdatePacks\{1}_{2}", AppDomain.CurrentDomain.BaseDirectory, userID, strCurrentDate);
                     if (!Directory.Exists(strPackPath))
-                        Directory.CreateDirectory(strPackPath);
+                    {
+                        
+                        Directory.CreateDirectory(strPackPath, DirPermission);
+                    }
                     string strFinalStruct = "";
                     string strFinalAlter = "";
 
                     if (!Directory.Exists(string.Format(@"{0}\Dlls", strPackPath)))
-                        Directory.CreateDirectory(string.Format(@"{0}\Dlls", strPackPath));
+                        Directory.CreateDirectory(string.Format(@"{0}\Dlls", strPackPath),DirPermission);
                     if (!Directory.Exists(string.Format(@"{0}\Scripts", strPackPath)))
-                        Directory.CreateDirectory(string.Format(@"{0}\\Scripts", strPackPath));
+                        Directory.CreateDirectory(string.Format(@"{0}\\Scripts", strPackPath), DirPermission);
 
                     foreach (VersionsDto item in versions)
                     {
@@ -116,7 +124,7 @@ namespace VersionManager.WebService
                     streamWriter.Write(strFinalAlter);
                     streamWriter.Close();
                     if (!Directory.Exists(strZipFilePath))
-                        Directory.CreateDirectory(strZipFilePath);
+                        Directory.CreateDirectory(strZipFilePath, DirPermission);
                     ZipFile.CreateFromDirectory(strPackPath, string.Format(@"{0}\{1}_{2}.zip", strZipFilePath, userID, strCurrentDate), CompressionLevel.Optimal, false);
 
                     return string.Format("{0}_{1}.zip", userID, strCurrentDate);//اسم فایلی که مخصوص این کاربر ساخته شده و میتواد در برنامه آنرا دانلود کند
