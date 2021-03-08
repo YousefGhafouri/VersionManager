@@ -22,5 +22,7 @@ namespace VersionManager.Properties {
                 return defaultInstance;
             }
         }
+
+        public string LastSelectedFolderPath { get; internal set; } = @"E:\Sent Files";
     }
 }

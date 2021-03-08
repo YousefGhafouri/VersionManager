@@ -102,8 +102,8 @@ namespace VersionManager.Utilities
         public class VersionInfo
         {
             public string PackVersionCode { get; set; }
-            public string AppVersioCode { get; set; }
-            public string UserId { get; set; }
+            public string AppVersionCode { get; set; }
+            public string CustomerId { get; set; }
             public ServicePackType PackType { get; set; }
         }
 

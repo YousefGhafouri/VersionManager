@@ -1234,6 +1234,11 @@ namespace VersionManager.Utilities
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             return serializer.Serialize(obj);
         }
+        public static T JsonToObject<T>(this string json)
+        {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            return serializer.Deserialize<T>(json);
+        }
 
     }
     public static class MemberInfoExtensions

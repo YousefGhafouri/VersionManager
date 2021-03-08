@@ -18,7 +18,7 @@ namespace VersionManager
     {
         #region Private Properties
         private VersionsController versionsController;
-        List<VersionsDto> versions;
+        List<VersionDto> versions;
         private int currentId { get => gridVersionManager.GetValue("Id").ToInteger(0); }
         private string currentVersionName { get => gridVersionManager.GetValue("VersionName").ToString(); }
         WaitingWindows waitingWindows = new WaitingWindows();
@@ -41,7 +41,7 @@ namespace VersionManager
         {
             foreach (FileInfo fileInfo in sourceDirectory.GetFiles())
             {
-                fileInfo.CopyTo(Path.Combine(destinationDirectory.FullName, fileInfo.Name),true);
+                fileInfo.CopyTo(Path.Combine(destinationDirectory.FullName, fileInfo.Name), true);
             }
 
             foreach (DirectoryInfo diSourceSubDirectory in sourceDirectory.GetDirectories())
@@ -119,7 +119,7 @@ namespace VersionManager
                         NetworkShare.DeleteFilesAndFolders("/" + currentVersionName);
                         NetworkShare.DeleteFolder("/" + currentVersionName);
                     }
-                    VersionsDto versionsDto = (VersionsDto)bsVersions.Current;
+                    VersionDto versionsDto = (VersionDto)bsVersions.Current;
                     FillData();
                 }
             }
@@ -137,11 +137,10 @@ namespace VersionManager
         {
             this.Close();
         }
-        #endregion
 
         private void btnCreateFullPack_Click(object sender, EventArgs e)
         {
-            if(bsVersions.Count == 0)
+            if (bsVersions.Count == 0)
             {
                 MessageBox.Show("رکوردی برای ساخت پک کامل وجود ندارد");
                 return;
@@ -158,7 +157,7 @@ namespace VersionManager
                 try
                 {
                     if (Directory.Exists(strFullPackPath))
-                        Directory.Delete(strFullPackPath,true);
+                        Directory.Delete(strFullPackPath, true);
                 }
                 catch (Exception ex)
                 {
@@ -170,7 +169,7 @@ namespace VersionManager
                     Directory.CreateDirectory(string.Format(@"{0}\Dlls", strFullPackPath));
                 if (!Directory.Exists(string.Format(@"{0}\Scripts", strFullPackPath)))
                     Directory.CreateDirectory(string.Format(@"{0}\\Scripts", strFullPackPath));
-                foreach (VersionsDto item in (List<VersionsDto>)bsVersions.DataSource)
+                foreach (VersionDto item in (List<VersionDto>)bsVersions.DataSource)
                 {
                     if (!string.IsNullOrWhiteSpace(item.DllPath) && Directory.Exists(item.DllPath))
                     {
@@ -203,18 +202,18 @@ namespace VersionManager
                 if (File.Exists(saveFileDialog.FileName))
                     File.Delete(saveFileDialog.FileName);
                 ZipFile.CreateFromDirectory(strFullPackPath, saveFileDialog.FileName, CompressionLevel.Optimal, false);
-                MessageBox.Show(string.Format("فایل پک کامل با موفقیت در مسیر {0} ساخته شد",saveFileDialog.FileName));
+                MessageBox.Show(string.Format("فایل پک کامل با موفقیت در مسیر {0} ساخته شد", saveFileDialog.FileName));
             }
         }
 
         private void gridVersionManager_Click(object sender, EventArgs e)
         {
-            if(gridVersionManager.RowCount > 0 && gridVersionManager.CurrentRow != null
+            if (gridVersionManager.RowCount > 0 && gridVersionManager.CurrentRow != null
                 && gridVersionManager.CurrentRow.RowType == Janus.Windows.GridEX.RowType.Record)
             {
-                if(gridVersionManager.CurrentColumn != null && gridVersionManager.CurrentColumn.Key == "IsSelect")
+                if (gridVersionManager.CurrentColumn != null && gridVersionManager.CurrentColumn.Key == "IsSelect")
                 {
-                    ((VersionsDto)bsVersions.Current).IsSelect = !((VersionsDto)bsVersions.Current).IsSelect;
+                    ((VersionDto)bsVersions.Current).IsSelect = !((VersionDto)bsVersions.Current).IsSelect;
                     gridVersionManager.UpdateData();
                 }
             }
@@ -227,13 +226,13 @@ namespace VersionManager
                 MessageBox.Show("رکوردی برای ساخت پک انتخابی وجود ندارد");
                 return;
             }
-            List<VersionsDto> lstSelectedRecords = new List<VersionsDto>();
-            foreach (VersionsDto item in (List<VersionsDto>)bsVersions.DataSource)
+            List<VersionDto> lstSelectedRecords = new List<VersionDto>();
+            foreach (VersionDto item in (List<VersionDto>)bsVersions.DataSource)
             {
                 if (item.IsSelect)
                     lstSelectedRecords.Add(item);
             }
-            if(lstSelectedRecords.Count == 0)
+            if (lstSelectedRecords.Count == 0)
             {
                 MessageBox.Show("رکوردی برای ساخت پک انتخاب نشده است");
                 return;
@@ -262,7 +261,7 @@ namespace VersionManager
                     Directory.CreateDirectory(string.Format(@"{0}\Dlls", strCustomPackPath));
                 if (!Directory.Exists(string.Format(@"{0}\Scripts", strCustomPackPath)))
                     Directory.CreateDirectory(string.Format(@"{0}\\Scripts", strCustomPackPath));
-                foreach (VersionsDto item in lstSelectedRecords)
+                foreach (VersionDto item in lstSelectedRecords)
                 {
                     if (!string.IsNullOrWhiteSpace(item.DllPath) && Directory.Exists(item.DllPath))
                     {
@@ -304,16 +303,17 @@ namespace VersionManager
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "INI Files (.INI)|*.ini";
             openFileDialog.Title = "انتخاب فایل کاربر";
-            if(openFileDialog.ShowDialog() == DialogResult.OK)
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                StreamReader streamReader = new StreamReader(openFileDialog.FileName);
-                string strUserVersion = streamReader.ReadToEnd();
-                int intUserVersion = strUserVersion.ToInteger();
-                List<VersionsDto> lstVersions = (List<VersionsDto>)bsVersions.DataSource;
-                if(lstVersions != null && lstVersions.Count > 0)
+                var userVersion = "";
+                using (StreamReader streamReader = new StreamReader(openFileDialog.FileName))
+                    userVersion = streamReader.ReadToEnd();
+                var result = userVersion.JsonToObject<VersionDto>();
+                List<VersionDto> lstVersions = (List<VersionDto>)bsVersions.DataSource;
+                if (lstVersions != null && lstVersions.Count > 0)
                 {
-                    List<VersionsDto> lstUserVersions = lstVersions.Where(x => x.VersionCodeInt > intUserVersion).ToList();
-                    if(lstUserVersions != null && lstUserVersions.Count > 0)
+                    List<VersionDto> lstUserVersions = lstVersions.Where(x => x.VersionCode.CompareTo(result.VersionCode) > 0).ToList();
+                    if (lstUserVersions != null && lstUserVersions.Count > 0)
                     {
                         SaveFileDialog saveFileDialog = new SaveFileDialog();
                         saveFileDialog.Title = "ذخیره فایل پک کاربر";
@@ -339,7 +339,7 @@ namespace VersionManager
                                 Directory.CreateDirectory(string.Format(@"{0}\Dlls", strUserPackPath));
                             if (!Directory.Exists(string.Format(@"{0}\Scripts", strUserPackPath)))
                                 Directory.CreateDirectory(string.Format(@"{0}\\Scripts", strUserPackPath));
-                            foreach (VersionsDto item in lstUserVersions)
+                            foreach (VersionDto item in lstUserVersions)
                             {
                                 if (!string.IsNullOrWhiteSpace(item.DllPath) && Directory.Exists(item.DllPath))
                                 {
@@ -372,12 +372,12 @@ namespace VersionManager
                             if (File.Exists(saveFileDialog.FileName))
                                 File.Delete(saveFileDialog.FileName);
                             ZipFile.CreateFromDirectory(strUserPackPath, saveFileDialog.FileName, CompressionLevel.Optimal, false);
-                            MessageBox.Show(string.Format("فایل پک کاربر با موفقیت در مسیر {0} ساخته شد", saveFileDialog.FileName));
+                            MessageBox.Show($"فایل پک کاربر با موفقیت در مسیر \n{saveFileDialog.FileName} ساخته شد");
                         }
                     }
                     else
                     {
-                        MessageBox.Show("فایل کاربر شامل آخرین بروزرسانی می باشد");
+                        MessageBox.Show("نرم‌افزار بروز شده است و شامل آخرین تغییرات می‌باشد");
                     }
                 }
                 else
@@ -387,5 +387,7 @@ namespace VersionManager
 
             }
         }
+        #endregion
+
     }
 }

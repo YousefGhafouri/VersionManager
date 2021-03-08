@@ -5,12 +5,10 @@ using VersionManager.Utilities;
 
 namespace VersionManager.Model
 {
-    public class VersionDto
+    public class VersionsDto
     {
         public int ID { get; set; }
         public string VersionCode { get; set; }
-        public string AppVersionCode { get => VersionCode; set => VersionCode = value; }
-        public string PackVersionCode { get; set ; }
         public VersionStatus VersionStatus { get; set; } = VersionStatus.Exists;
         public string VersionName { get; set; }
         public string DllPath { get; set; }

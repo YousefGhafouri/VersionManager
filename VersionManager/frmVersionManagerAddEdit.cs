@@ -18,7 +18,7 @@ namespace VersionManager
     {
         #region Private Properties
         VersionsController versionsController;
-        VersionsDto versions;
+        VersionDto versions;
         private int _versionsId;
         FormAction _formAction;
         WaitingWindows waitingWindows = new WaitingWindows();
@@ -66,15 +66,19 @@ namespace VersionManager
         private void btnBrowsDll_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+            folderBrowserDialog.SelectedPath = Properties.Settings.Default.LastSelectedFolderPath;
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
                 txtDllPath.Text = folderBrowserDialog.SelectedPath;
+                Properties.Settings.Default.LastSelectedFolderPath = folderBrowserDialog.SelectedPath;
             }
         }
 
         private void btnBrowsStructureScript_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            //openFileDialog.InitialDirectory  = @"E:\Sent Files";
+            openFileDialog.RestoreDirectory = true;
             openFileDialog.Title = "انتخاب فایل اسکریپت ساختار";
             openFileDialog.Filter = "Sql Query Files (*.sql)|*.sql|All Files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -86,6 +90,8 @@ namespace VersionManager
         private void btnBrowsAlterScript_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.RestoreDirectory = true;
+            //openFileDialog.InitialDirectory  = @"E:\Sent Files";
             openFileDialog.Title = "انتخاب فایل اسکریپت تغییرات";
             openFileDialog.Filter = "Sql Query Files (*.sql)|*.sql|All Files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -99,10 +105,9 @@ namespace VersionManager
             try
             {
                 waitingWindows.Show(this);
-                versions = (VersionsDto)bsVersions.Current;
-                versionsController.Save(_formAction, versions);
-                string strDestinationDllPath = "/" + versions.VersionName;
-                string strDestinationScriptPath = NetworkShare.host + strDestinationDllPath + "/Scripts";
+                versions = (VersionDto)bsVersions.Current;
+                string destinationDllPath = "/" + versions.VersionName;
+                string destinationScriptPath = NetworkShare.host + destinationDllPath + "/Scripts";
                 if (_formAction == FormAction.Edit)
                 {
                     if (NetworkShare.DoesFtpDirectoryExist("/" + versions.VersionName))
@@ -111,10 +116,10 @@ namespace VersionManager
                         NetworkShare.DeleteFolder("/" + versions.VersionName);
                     }
                 }
-                NetworkShare.CopyAllFilesToFTP(versions.DllPath, strDestinationDllPath, true);
-                NetworkShare.WriteFilesToFtp(versions.StructureScriptPath, strDestinationScriptPath + "/__Structure.sql");
-                NetworkShare.WriteFilesToFtp(versions.AlterScriptPath, strDestinationScriptPath + "/__Alter.sql");
-                waitingWindows.Close();
+                NetworkShare.CopyAllFilesToFTP(versions.DllPath, destinationDllPath, true);
+                NetworkShare.WriteFilesToFtp(versions.StructureScriptPath, destinationScriptPath + "/__Structure.sql");
+                NetworkShare.WriteFilesToFtp(versions.AlterScriptPath, destinationScriptPath + "/__Alter.sql");
+                versionsController.Save(_formAction, versions);
                 MessageBox.Show("اطلاعات با موفقیت ذخیره شد");
                 this.Close();
             }

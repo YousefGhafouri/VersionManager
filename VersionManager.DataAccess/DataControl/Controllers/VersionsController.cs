@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Dapper;
 using System.Collections.Generic;
-using Dapper;
+using System.Linq;
 using VersionManager.DataAccess.Repositories;
 using VersionManager.Entities;
 using VersionManager.Model;
@@ -9,7 +9,7 @@ using static VersionManager.Utilities.DataStructure;
 
 namespace VersionManager.DataControl.Controllers
 {
-    public class VersionsController : IController<Versions, VersionDto>
+    public class VersionsController : IController<Versions, VersionsDto>
     {
         ICommandText commandText;
         private Repository<Versions> repository;
@@ -18,7 +18,7 @@ namespace VersionManager.DataControl.Controllers
             commandText = new VersionsCommandText();
             repository = new Repository<Versions>(/*configuration,*/ commandText);
         }
-        public Versions Add(VersionDto versions)
+        public Versions Add(VersionsDto versions)
         {
             return repository.Add(GetAddParameter(versions));
         }
@@ -34,22 +34,22 @@ namespace VersionManager.DataControl.Controllers
             repository = null;
         }
 
-        public List<VersionDto> GetAll()
+        public List<VersionsDto> GetAll()
         {
-            return repository.Get().ToXList<Versions, VersionDto>();
+            return repository.Get().ToList<Versions, VersionsDto>();
         }
 
-        public VersionDto GetById(int id)
+        public VersionsDto GetById(int id)
         {
-            return repository.GetById(id).ToDto<Versions, VersionDto>();
+            return repository.GetById(id).ToDto<Versions, VersionsDto>();
         }
 
-        public List<VersionDto> GetForUpdate(string versionCode)
+        public List<VersionsDto> GetForUpdate(string versionCode)
         {
-            return repository.GetForUpate(versionCode).ToXList<Versions, VersionDto>();
+            return repository.GetForUpate(versionCode).ToXList<Versions, VersionsDto>();
         }
 
-        public Versions Save(DataStructure.FormAction formAction, VersionDto versions)
+        public Versions Save(DataStructure.FormAction formAction, VersionsDto versions)
         {
             if (formAction == FormAction.Add)
                 return Add(versions);
@@ -60,7 +60,7 @@ namespace VersionManager.DataControl.Controllers
             }
         }
 
-        public void Update(VersionDto versions)
+        public void Update(VersionsDto versions)
         {
             repository.Update(GetUpdateParameter(versions));
         }
@@ -70,7 +70,7 @@ namespace VersionManager.DataControl.Controllers
             return repository.MaxCode();
         }
 
-        internal DynamicParameters GetAddParameter(VersionDto versions)
+        internal DynamicParameters GetAddParameter(VersionsDto versions)
         {
             return new DynamicParameters(new
             {
@@ -83,7 +83,7 @@ namespace VersionManager.DataControl.Controllers
             });
         }
 
-        internal DynamicParameters GetUpdateParameter(VersionDto versions)
+        internal DynamicParameters GetUpdateParameter(VersionsDto versions)
         {
             return new DynamicParameters(new
             {
